@@ -55,7 +55,7 @@ const CONFIG = {
     INITIAL: 0,
     MAX: 100,
     DRAIN_WATCHING_PER_SEC: 3,  // Cada segundo assistindo reduz -3%
-    GAIN_DEFAULT_PER_SEC: 1,    // Cada segundo sem assistir aumenta +1%
+    GAIN_DEFAULT_PER_SEC: 2,    // Cada segundo sem assistir aumenta +2%
     INTERVAL_MS: 1000,
     YOUTUBE_URL: "https://www.youtube.com/embed/OIJBDKpX2wA?si=QOLT-M3_iTB5hXzb&autoplay=1&enablejsapi=1"
   },
@@ -597,10 +597,9 @@ const SoundFX = {
 // ===================================================================
 // SISTEMA DA PORTA DO ESCRITÓRIO
 // ===================================================================
-function toggleDoor() {
-  if (!GameState.started || GameState.monitorUp || GameState.isWatching || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon) return;
-
-  GameState.doorClosed = !GameState.doorClosed;
+function setDoorState(closed, playSound = true) {
+  if (GameState.doorClosed === closed) return;
+  GameState.doorClosed = closed;
 
   if (GameState.doorClosed) {
     // Porta Fechada
@@ -620,12 +619,19 @@ function toggleDoor() {
     DOM.doorStatusText.textContent = 'ABERTA';
   }
 
-  SoundFX.playDoor(GameState.doorClosed);
+  if (playSound) {
+    SoundFX.playDoor(GameState.doorClosed);
+  }
 
   // Se a porta acabou de fechar, avisa a IA dos personagens
   if (GameState.doorClosed && typeof CharacterSystem !== 'undefined') {
     CharacterSystem.onDoorClosed();
   }
+}
+
+function toggleDoor() {
+  if (!GameState.started || GameState.monitorUp || GameState.isWatching || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon) return;
+  setDoorState(!GameState.doorClosed, true);
 }
 
 // ===================================================================
@@ -736,6 +742,12 @@ function toggleWatch() {
 // Abrir modo assistir (toca vídeo de transição e depois ativa o player do YouTube)
 function openWatch() {
   if (GameState.isWatching || GameState.isTransitioning) return;
+
+  // Quando for assistir, a porta fica aberta obrigatoriamente
+  if (GameState.doorClosed) {
+    setDoorState(false, true);
+  }
+
   GameState.isTransitioning = true;
 
   const video = DOM.videoWatchOpen;
@@ -1087,16 +1099,17 @@ function updateAnxietyDisplays() {
   }
 
   if (DOM.anxietyStatusTag) {
+    const gainRate = CONFIG.ANXIETY.GAIN_DEFAULT_PER_SEC;
     if (GameState.isWatching) {
       DOM.anxietyStatusTag.textContent = 'RELAXANDO (-3%/s)';
     } else if (anxietyVal < 40) {
-      DOM.anxietyStatusTag.textContent = 'CALMO (+1%/s)';
+      DOM.anxietyStatusTag.textContent = `CALMO (+${gainRate}%/s)`;
     } else if (anxietyVal < 70) {
-      DOM.anxietyStatusTag.textContent = 'INQUIETO (+1%/s)';
+      DOM.anxietyStatusTag.textContent = `INQUIETO (+${gainRate}%/s)`;
     } else if (anxietyVal < 90) {
-      DOM.anxietyStatusTag.textContent = 'MUITO ANSIOSO (+1%/s)';
+      DOM.anxietyStatusTag.textContent = `MUITO ANSIOSO (+${gainRate}%/s)`;
     } else {
-      DOM.anxietyStatusTag.textContent = 'PÂNICO IMINENTE! (+1%/s)';
+      DOM.anxietyStatusTag.textContent = `PÂNICO IMINENTE! (+${gainRate}%/s)`;
     }
   }
 
