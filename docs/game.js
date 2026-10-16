@@ -65,17 +65,20 @@ const CONFIG = {
     pai: {
       id: 'pai',
       name: 'Pai',
-      src: 'personagens/pai/InShot_20261015_193322516.png'
+      src: 'personagens/pai/InShot_20261015_193322516.png',
+      jumpscareVideo: 'personagens/pai/jumpscare-pai.mp4'
     },
     mae: {
       id: 'mae',
       name: 'Mãe',
-      src: 'personagens/mãe/InShot_20261015_200557116.png'
+      src: 'personagens/mãe/InShot_20261015_200557116.png',
+      jumpscareVideo: 'personagens/mãe/jumpscare-mãe.mp4'
     },
     irmao: {
       id: 'irmao',
       name: 'Irmão Mais Novo',
-      src: 'personagens/irmão%20mais%20novo/InShot_20261015_192531594.png'
+      src: 'personagens/irmão%20mais%20novo/InShot_20261015_192531594.png',
+      jumpscareVideo: 'personagens/irmão mais novo/jumpscare-do-irmão-mais-novo.mp4'
     }
   },
 
@@ -193,6 +196,7 @@ const GameState = {
   currentNight: 1,         // Noite atual (carregada do save ou iniciada em 1)
   hasWon: false,           // true quando chega às 6:00 AM
   isGameOver: false,       // true quando a noite é perdida
+  isJumpscareActive: false,// true durante a execução do vídeo de jumpscare
   anxiety: 0,              // 0% até 100% (Game Over aos 100%)
   clockTimer: null,        // Referência do setInterval do relógio
   anxietyTimer: null,      // Referência do setInterval da ansiedade
@@ -262,13 +266,18 @@ const DOM = {
   videoMonitorClose: document.getElementById('video-monitor-close'),
   flipMonitorBar: document.getElementById('flip-monitor-bar'),
 
+  // Vídeos de Jumpscare em Tela Cheia
+  videoJumpscarePai: document.getElementById('video-jumpscare-pai'),
+  videoJumpscareMae: document.getElementById('video-jumpscare-mae'),
+  videoJumpscareIrmao: document.getElementById('video-jumpscare-irmao'),
+
   // Câmeras
   cameraFeedImg: document.getElementById('camera-feed-img'),
   cameraNameDisplay: document.getElementById('camera-name-display'),
   camButtons: document.querySelectorAll('.cam-map-btn'),
   staticCanvas: document.getElementById('camera-static-canvas'),
   
-  // Camadas de Personagens (para implementação futura)
+  // Camadas de Personagens
   officeCharacterLayer: document.getElementById('office-character-layer'),
   cameraCharacterLayer: document.getElementById('camera-character-layer'),
 };
@@ -623,14 +632,18 @@ function setDoorState(closed, playSound = true) {
     SoundFX.playDoor(GameState.doorClosed);
   }
 
-  // Se a porta acabou de fechar, avisa a IA dos personagens
-  if (GameState.doorClosed && typeof CharacterSystem !== 'undefined') {
-    CharacterSystem.onDoorClosed();
+  // Notifica a IA dos personagens sobre a mudança de estado da porta
+  if (typeof CharacterSystem !== 'undefined') {
+    if (GameState.doorClosed) {
+      CharacterSystem.onDoorClosed();
+    } else {
+      CharacterSystem.onDoorOpened();
+    }
   }
 }
 
 function toggleDoor() {
-  if (!GameState.started || GameState.monitorUp || GameState.isWatching || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon) return;
+  if (!GameState.started || GameState.monitorUp || GameState.isWatching || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon || GameState.isJumpscareActive) return;
   setDoorState(!GameState.doorClosed, true);
 }
 
@@ -640,7 +653,7 @@ function toggleDoor() {
 
 // Alternar entre abrir e fechar o monitor
 function toggleMonitor() {
-  if (!GameState.started || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon) return;
+  if (!GameState.started || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon || GameState.isJumpscareActive) return;
 
   if (GameState.monitorUp) {
     closeMonitor();
@@ -726,7 +739,7 @@ function closeMonitor() {
 // ===================================================================
 
 function toggleWatch() {
-  if (!GameState.started || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon) return;
+  if (!GameState.started || GameState.isTransitioning || GameState.isGameOver || GameState.hasWon || GameState.isJumpscareActive) return;
 
   if (GameState.isWatching) {
     closeWatch();
@@ -1199,6 +1212,12 @@ function triggerGameOver(reason = 'Você foi pego!') {
   if (reason === 'ATAQUE DE ANSIEDADE') {
     if (DOM.gameoverSubtitle) DOM.gameoverSubtitle.textContent = 'ATAQUE DE ANSIEDADE (100%)';
     if (DOM.gameoverDesc) DOM.gameoverDesc.textContent = 'Sua ansiedade chegou ao limite máximo. Você perdeu o controle da respiração e o pânico tomou conta!';
+  } else if (reason.includes('PAI')) {
+    if (DOM.gameoverSubtitle) DOM.gameoverSubtitle.textContent = 'O PAI TE PEGOU NO FLAGRA!';
+    if (DOM.gameoverDesc) DOM.gameoverDesc.textContent = 'Ele te pegou acordado jogando tarde... Acabou a brincadeira!';
+  } else if (reason.includes('MÃE')) {
+    if (DOM.gameoverSubtitle) DOM.gameoverSubtitle.textContent = 'A MÃE TE PEGOU NO FLAGRA!';
+    if (DOM.gameoverDesc) DOM.gameoverDesc.textContent = 'Ela ouviu você acordado até de madrugada... Sem celular por um mês!';
   } else {
     if (DOM.gameoverSubtitle) DOM.gameoverSubtitle.textContent = 'VOCÊ FOI PEGO';
     if (DOM.gameoverDesc) DOM.gameoverDesc.textContent = 'Você não sobreviveu à noite...';
@@ -1386,9 +1405,15 @@ function returnToMainMenu() {
   GameState.started = false;
   GameState.hasWon = false;
   GameState.isGameOver = false;
+  GameState.isJumpscareActive = false;
   GameState.anxiety = 0;
   updateAnxietyDisplays();
   if (DOM.anxietyHud) DOM.anxietyHud.classList.remove('active');
+
+  // Esconde todos os vídeos de jumpscare se estavam ativos
+  if (DOM.videoJumpscarePai) DOM.videoJumpscarePai.style.display = 'none';
+  if (DOM.videoJumpscareMae) DOM.videoJumpscareMae.style.display = 'none';
+  if (DOM.videoJumpscareIrmao) DOM.videoJumpscareIrmao.style.display = 'none';
 
   // Interrompe IA e limpa personagens
   if (typeof CharacterSystem !== 'undefined') CharacterSystem.clearAll();
@@ -1427,6 +1452,159 @@ function returnToMainMenu() {
 }
 
 // ===================================================================
+// SISTEMA DE JUMPSCARE (VÍDEOS EM TELA CHEIA)
+// ===================================================================
+function getJumpscareVideo(charId) {
+  if (charId === 'pai') return DOM.videoJumpscarePai;
+  if (charId === 'mae') return DOM.videoJumpscareMae;
+  if (charId === 'irmao') return DOM.videoJumpscareIrmao;
+  return null;
+}
+
+function triggerJumpscare(charId) {
+  if (GameState.isJumpscareActive || !GameState.started || GameState.hasWon || GameState.isGameOver) return;
+  GameState.isJumpscareActive = true;
+
+  console.log(`[Jumpscare] Disparando jumpscare em tela cheia: ${charId}`);
+
+  // Cancela temporizadores pendentes de ataque
+  if (typeof CharacterSystem !== 'undefined') {
+    CharacterSystem.cancelAllAttackTimers();
+  }
+
+  // Se o jogador estiver assistindo TV, encerra a TV imediatamente
+  if (GameState.isWatching) {
+    if (DOM.watchYoutubeIframe) DOM.watchYoutubeIframe.src = '';
+    DOM.watchSystem.classList.remove('active');
+    GameState.isWatching = false;
+  }
+
+  // Se o monitor estiver aberto, encerra imediatamente
+  if (GameState.monitorUp) {
+    DOM.cameraSystem.classList.remove('active');
+    DOM.flipMonitorBar.classList.remove('monitor-up');
+    GameState.monitorUp = false;
+  }
+
+  // Esconde quaisquer vídeos de transição que possam estar rodando
+  if (DOM.videoMonitorOpen) DOM.videoMonitorOpen.style.display = 'none';
+  if (DOM.videoMonitorClose) DOM.videoMonitorClose.style.display = 'none';
+  if (DOM.videoWatchOpen) DOM.videoWatchOpen.style.display = 'none';
+  if (DOM.videoWatchClose) DOM.videoWatchClose.style.display = 'none';
+
+  // Garante que o escritório fica ativo no fundo
+  DOM.officeScene.classList.add('active');
+
+  const video = getJumpscareVideo(charId);
+  if (!video) {
+    console.error(`[Jumpscare] Vídeo não encontrado para: ${charId}`);
+    onJumpscareFinished(charId);
+    return;
+  }
+
+  // Prepara o vídeo em tela cheia com áudio
+  video.style.display = 'block';
+  video.currentTime = 0;
+  video.muted = false;
+  video.volume = 1.0;
+
+  let isEnded = false;
+  const finish = () => {
+    if (isEnded) return;
+    isEnded = true;
+    video.removeEventListener('ended', finish);
+    video.removeEventListener('error', finish);
+    video.style.display = 'none';
+    onJumpscareFinished(charId);
+  };
+
+  video.addEventListener('ended', finish);
+  video.addEventListener('error', finish);
+
+  // Fallback de segurança caso o vídeo falhe ou não dispare o evento ended
+  setTimeout(() => {
+    if (!isEnded && GameState.isJumpscareActive) {
+      finish();
+    }
+  }, 15000);
+
+  const playPromise = video.play();
+  if (playPromise !== undefined) {
+    playPromise.catch((err) => {
+      console.warn('[Jumpscare] Falha ao iniciar com som, tentando muted:', err);
+      video.muted = true;
+      video.play().catch(() => {
+        finish();
+      });
+    });
+  }
+}
+
+function onJumpscareFinished(charId) {
+  GameState.isJumpscareActive = false;
+
+  // =================================================================
+  // EXCEÇÃO ESPECIAL: IRMÃO MAIS NOVO
+  // O irmão NÃO dá tela de Game Over!
+  // Ele chama os pais e teleporta o Pai e a Mãe diretamente no corredor (CAM 2).
+  // =================================================================
+  if (charId === 'irmao') {
+    console.log('[Jumpscare] O Irmão Mais Novo chamou os pais! Teleportando Pai e Mãe para o Corredor (CAM 2).');
+
+    // 1. Reseta o Irmão para sua posição inicial (longe da porta)
+    CharacterSystem.cancelAttackTimer('irmao');
+    CharacterSystem.stepIndices['irmao'] = 0;
+    CharacterSystem.doorWaitTicks['irmao'] = 0;
+    const irmaoStart = CONFIG.AI_ROUTES.irmao[0];
+    CharacterSystem.state['irmao'] = {
+      location: irmaoStart.location,
+      positionKey: irmaoStart.positionKey
+    };
+
+    // 2. TELEPORTA OS PAIS NO CORREDOR (CAM 2)
+    // Pai: porta esquerda do corredor (índice 5 da rota, posição iminente de perigo)
+    CharacterSystem.cancelAttackTimer('pai');
+    CharacterSystem.stepIndices['pai'] = 5;
+    CharacterSystem.doorWaitTicks['pai'] = 0;
+    CharacterSystem.state['pai'] = {
+      location: 'cam2',
+      positionKey: 'leftDoor'
+    };
+
+    // Mãe: meio do corredor (índice 3 da rota)
+    CharacterSystem.cancelAttackTimer('mae');
+    CharacterSystem.stepIndices['mae'] = 3;
+    CharacterSystem.doorWaitTicks['mae'] = 0;
+    CharacterSystem.state['mae'] = {
+      location: 'cam2',
+      positionKey: 'mid'
+    };
+
+    // 3. Efeitos de tensão e susto: aumento de ansiedade e batimento cardíaco
+    GameState.anxiety = Math.min(95, GameState.anxiety + 25);
+    updateAnxietyDisplays();
+    SoundFX.playFootsteps();
+    SoundFX.playHeartbeat(GameState.anxiety);
+
+    // 4. Re-renderiza personagens no cenário e câmeras
+    CharacterSystem.render();
+    DOM.officeScene.classList.add('active');
+    return;
+  }
+
+  // =================================================================
+  // PAI E MÃE: Jumpscare fatal -> Tela de Game Over!
+  // =================================================================
+  if (charId === 'pai') {
+    triggerGameOver('O PAI TE PEGOU NO FLAGRA!');
+  } else if (charId === 'mae') {
+    triggerGameOver('A MÃE TE PEGOU NO FLAGRA!');
+  } else {
+    triggerGameOver('VOCÊ FOI PEGO!');
+  }
+}
+
+// ===================================================================
 // ===================================================================
 // SISTEMA DE POSICIONAMENTO, ROTA E INTELIGÊNCIA ARTIFICIAL (IA)
 // ===================================================================
@@ -1445,6 +1623,13 @@ const CharacterSystem = {
     irmao: 0
   },
 
+  // Temporizadores individuais de ataque quando na porta aberta
+  attackTimers: {
+    pai: null,
+    mae: null,
+    irmao: null
+  },
+
   // Temporizador do loop de IA
   aiTimer: null,
 
@@ -1453,6 +1638,32 @@ const CharacterSystem = {
     pai: null,
     mae: null,
     irmao: null
+  },
+
+  // Agenda um ataque/jumpscare se a porta permanecer aberta
+  scheduleAttack(charId, delayMs = 2800) {
+    if (this.attackTimers[charId] || GameState.isJumpscareActive || !GameState.started || GameState.isGameOver || GameState.hasWon) return;
+    this.attackTimers[charId] = setTimeout(() => {
+      this.attackTimers[charId] = null;
+      if (!GameState.doorClosed && GameState.started && !GameState.isGameOver && !GameState.hasWon && !GameState.isJumpscareActive) {
+        triggerJumpscare(charId);
+      }
+    }, delayMs);
+  },
+
+  // Cancela o temporizador de ataque de um personagem específico
+  cancelAttackTimer(charId) {
+    if (this.attackTimers[charId]) {
+      clearTimeout(this.attackTimers[charId]);
+      this.attackTimers[charId] = null;
+    }
+  },
+
+  // Cancela todos os temporizadores de ataque
+  cancelAllAttackTimers() {
+    for (const charId of Object.keys(this.attackTimers)) {
+      this.cancelAttackTimer(charId);
+    }
   },
 
   // Inicia a IA e posiciona todos nos pontos de partida
@@ -1465,6 +1676,7 @@ const CharacterSystem = {
 
   // Coloca cada personagem no seu quarto inicial
   resetAllToStart() {
+    this.cancelAllAttackTimers();
     for (const charId of Object.keys(CONFIG.CHARACTERS)) {
       this.stepIndices[charId] = 0;
       this.doorWaitTicks[charId] = 0;
@@ -1491,6 +1703,7 @@ const CharacterSystem = {
       clearInterval(this.aiTimer);
       this.aiTimer = null;
     }
+    this.cancelAllAttackTimers();
   },
 
   // Obtém o nível de agressividade/atividade de acordo com a noite e a hora
@@ -1512,7 +1725,7 @@ const CharacterSystem = {
 
   // Oportunidade de movimento executada a cada tick
   tickAi() {
-    if (!GameState.started || GameState.hasWon || GameState.isGameOver) return;
+    if (!GameState.started || GameState.hasWon || GameState.isGameOver || GameState.isJumpscareActive) return;
 
     for (const charId of Object.keys(CONFIG.CHARACTERS)) {
       this.processCharacter(charId);
@@ -1529,6 +1742,7 @@ const CharacterSystem = {
     if (isAtDoor) {
       if (GameState.doorClosed) {
         // Jogador fechou a porta! O personagem é bloqueado
+        this.cancelAttackTimer(charId);
         this.doorWaitTicks[charId]++;
 
         if (this.doorWaitTicks[charId] === 1) {
@@ -1539,8 +1753,10 @@ const CharacterSystem = {
         }
       } else {
         // Porta está aberta!
-        // OBS: Conforme instruído, sem jumpscare por enquanto.
-        // O personagem permanece na porta vigiando o escritório até o jogador fechar.
+        if (!this.attackTimers[charId] && !GameState.isJumpscareActive) {
+          const delay = (GameState.isWatching || GameState.monitorUp) ? 2000 : 2800;
+          this.scheduleAttack(charId, delay);
+        }
         this.doorWaitTicks[charId] = 0;
       }
       return;
@@ -1579,10 +1795,22 @@ const CharacterSystem = {
 
     SoundFX.playFootsteps();
     this.render();
+
+    // Se acabou de chegar na porta:
+    if (this.stepIndices[charId] >= route.length - 1) {
+      if (GameState.doorClosed) {
+        this.doorWaitTicks[charId] = 1;
+        SoundFX.playDoorKnock();
+      } else {
+        const delay = (GameState.isWatching || GameState.monitorUp) ? 2000 : 2800;
+        this.scheduleAttack(charId, delay);
+      }
+    }
   },
 
   // Faz o personagem recuar após bater na porta fechada
   retreat(charId) {
+    this.cancelAttackTimer(charId);
     const prevLocation = this.state[charId].location;
     // Volta 3 passos atrás na rota (para o meio do corredor ou sala)
     this.stepIndices[charId] = Math.max(1, this.stepIndices[charId] - 3);
@@ -1602,14 +1830,26 @@ const CharacterSystem = {
     this.render();
   },
 
-  // Chamado quando o jogador aperta ESPAÇO ou clica no botão de fechar a porta
+  // Chamado quando a porta é fechada
   onDoorClosed() {
+    this.cancelAllAttackTimers();
     for (const charId of Object.keys(CONFIG.CHARACTERS)) {
       const route = CONFIG.AI_ROUTES[charId];
       if (this.stepIndices[charId] >= route.length - 1) {
         // Personagem estava na porta bem no momento que fechou!
         SoundFX.playDoorKnock();
         this.doorWaitTicks[charId] = 1;
+      }
+    }
+  },
+
+  // Chamado quando a porta é aberta
+  onDoorOpened() {
+    for (const charId of Object.keys(CONFIG.CHARACTERS)) {
+      const route = CONFIG.AI_ROUTES[charId];
+      if (this.stepIndices[charId] >= route.length - 1) {
+        // Personagem já estava na porta e o jogador abriu na cara dele!
+        this.scheduleAttack(charId, 1800);
       }
     }
   },
@@ -1624,6 +1864,7 @@ const CharacterSystem = {
   // Envia um personagem direto para a porta (atalho de teste)
   sendToDoor(charId) {
     if (!CONFIG.CHARACTERS[charId]) return;
+    this.cancelAttackTimer(charId);
     const route = CONFIG.AI_ROUTES[charId];
     this.stepIndices[charId] = route.length - 1;
     this.doorWaitTicks[charId] = 0;
@@ -1631,10 +1872,18 @@ const CharacterSystem = {
     this.state[charId] = { location: step.location, positionKey: step.positionKey };
     SoundFX.playFootsteps();
     this.render();
+
+    if (GameState.doorClosed) {
+      this.doorWaitTicks[charId] = 1;
+      SoundFX.playDoorKnock();
+    } else {
+      this.scheduleAttack(charId, 2800);
+    }
   },
 
   // Remove um personagem específico do cenário
   remove(charId) {
+    this.cancelAttackTimer(charId);
     this.state[charId] = null;
     this.render();
   },
@@ -1642,12 +1891,18 @@ const CharacterSystem = {
   // Limpa tudo
   clearAll() {
     this.stopAiLoop();
+    this.cancelAllAttackTimers();
     for (const charId of Object.keys(this.state)) {
       this.state[charId] = null;
       this.stepIndices[charId] = 0;
       this.doorWaitTicks[charId] = 0;
     }
     this.render();
+  },
+
+  // Dispara jumpscare diretamente através do CharacterSystem
+  triggerJumpscare(charId) {
+    triggerJumpscare(charId);
   },
 
   // Renderiza tanto no escritório quanto na câmera aberta
@@ -1744,11 +1999,17 @@ function resetGame() {
   GameState.anxiety = CONFIG.ANXIETY.INITIAL;
   GameState.hasWon = false;
   GameState.isGameOver = false;
+  GameState.isJumpscareActive = false;
   GameState.isTransitioning = false;
   GameState.doorClosed = false;
   GameState.monitorUp = false;
   GameState.isWatching = false;
   GameState.currentCamera = 'cam1';
+
+  // Ocultar todos os vídeos de jumpscare
+  if (DOM.videoJumpscarePai) DOM.videoJumpscarePai.style.display = 'none';
+  if (DOM.videoJumpscareMae) DOM.videoJumpscareMae.style.display = 'none';
+  if (DOM.videoJumpscareIrmao) DOM.videoJumpscareIrmao.style.display = 'none';
 
   // Reseta a porta para aberta
   DOM.bgDoorClosed.classList.remove('active');
@@ -1886,8 +2147,8 @@ function setupEvents() {
 
     if (!GameState.started) return;
 
-    // Se estiver em Game Over ou Vitória, bloqueia comandos normais de jogo
-    if (GameState.isGameOver || GameState.hasWon) return;
+    // Se estiver em Game Over, Vitória ou Jumpscare ativo, bloqueia comandos normais de jogo
+    if (GameState.isGameOver || GameState.hasWon || GameState.isJumpscareActive) return;
 
     switch (e.code) {
       case 'Space':
@@ -1946,15 +2207,27 @@ function setupEvents() {
         cheatAddAnxiety(-10);
         break;
 
-      // Atalhos de teste dev: testar personagens na porta e resetar
+      // Atalhos de teste dev: testar personagens na porta e jumpscares imediatos com Shift
       case 'KeyP':
-        if (typeof CharacterSystem !== 'undefined') CharacterSystem.sendToDoor('pai');
+        if (e.shiftKey) {
+          triggerJumpscare('pai');
+        } else if (typeof CharacterSystem !== 'undefined') {
+          CharacterSystem.sendToDoor('pai');
+        }
         break;
       case 'KeyM':
-        if (typeof CharacterSystem !== 'undefined') CharacterSystem.sendToDoor('mae');
+        if (e.shiftKey) {
+          triggerJumpscare('mae');
+        } else if (typeof CharacterSystem !== 'undefined') {
+          CharacterSystem.sendToDoor('mae');
+        }
         break;
       case 'KeyI':
-        if (typeof CharacterSystem !== 'undefined') CharacterSystem.sendToDoor('irmao');
+        if (e.shiftKey) {
+          triggerJumpscare('irmao');
+        } else if (typeof CharacterSystem !== 'undefined') {
+          CharacterSystem.sendToDoor('irmao');
+        }
         break;
       case 'KeyR':
         if (typeof CharacterSystem !== 'undefined') CharacterSystem.resetAllToStart();
@@ -1964,6 +2237,7 @@ function setupEvents() {
 
   // Funções acessíveis no console para teste rápido
   window.sendToDoor = (charId = 'pai') => CharacterSystem.sendToDoor(charId);
+  window.triggerJumpscare = triggerJumpscare;
   window.resetCharacters = () => CharacterSystem.resetAllToStart();
   window.advanceHour = () => {
     if (GameState.started && !GameState.hasWon && !GameState.isGameOver) {
