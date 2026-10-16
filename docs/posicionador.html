@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calibrador de Coordenadas - Five Nights at Famílias</title>
-  <link rel="icon" type="image/png" href="../favicon/um-favicon.png">
+  <link rel="icon" type="image/png" href="favicon/um-favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
@@ -375,7 +375,7 @@
     <div class="viewport-area">
       <div class="stage-wrapper" id="stage">
         <!-- Imagem de Fundo da Câmera ou Porta -->
-        <img id="stage-bg" src="../cenario-quarto-principal/imagens/porta-aberta.jpg" alt="Cenário">
+        <img id="stage-bg" src="cenario-quarto-principal/imagens/porta-aberta.jpg" alt="Cenário">
         
         <!-- Grid Opcional -->
         <div class="grid-overlay" id="grid"></div>
@@ -384,7 +384,7 @@
         <div id="draggable-character" style="left: 43.5%; top: 88%; height: 75%;">
           <div class="char-selection-box"></div>
           <div class="anchor-point" title="Ponto de Apoio dos Pés (X, Y)"></div>
-          <img id="char-img" src="../personagens/pai/InShot_20261015_193322516.png" alt="Personagem">
+          <img id="char-img" src="personagens/pai/InShot_20261015_193322516.png" alt="Personagem">
         </div>
 
         <!-- HUDs com Informações no Cenário -->
@@ -492,7 +492,7 @@
     const SCENES = {
       door: {
         name: '🚪 NA PORTA (ESCRITÓRIO)',
-        bg: '../cenario-quarto-principal/imagens/porta-aberta.jpg',
+        bg: 'cenario-quarto-principal/imagens/porta-aberta.jpg',
         defaultCoord: { x: 43.4, y: 99.6, h: 92.5, b: 90 },
         presets: [
           { name: 'Pai na Porta (Cinto)', x: 43.4, y: 99.6, h: 92.5, b: 90 },
@@ -505,7 +505,7 @@
       },
       cam1: {
         name: '🛋️ [CAM 1] - SALA PRINCIPAL',
-        bg: '../cenario-sala/fotos/cenario-sala.jpg',
+        bg: 'cenario-sala/fotos/cenario-sala.jpg',
         defaultCoord: { x: 49.5, y: 74.0, h: 56.0, b: 80 },
         presets: [
           { name: 'Centro da Sala (Meio)', x: 49.5, y: 74.0, h: 56.0, b: 80 },
@@ -516,7 +516,7 @@
       },
       cam2: {
         name: '🚪 [CAM 2] - CORREDOR',
-        bg: '../cenario-corredor/fotos/cenario-corredor.jpg',
+        bg: 'cenario-corredor/fotos/cenario-corredor.jpg',
         defaultCoord: { x: 41.4, y: 88.0, h: 62.0, b: 90 },
         presets: [
           { name: 'Porta Esquerda / Perigo (Mãe)', x: 41.4, y: 88.0, h: 62.0, b: 90 },
@@ -528,7 +528,7 @@
       },
       cam3: {
         name: '🍳 [CAM 3] - COZINHA',
-        bg: '../cozinha/cenario-cozinha.jpg',
+        bg: 'cozinha/cenario-cozinha.jpg',
         defaultCoord: { x: 31.8, y: 99.6, h: 58.0, b: 80 },
         presets: [
           { name: 'Chão / Balcão (Mãe Sem Voar)', x: 31.8, y: 99.6, h: 58.0, b: 80 },
@@ -540,7 +540,7 @@
       },
       cam4: {
         name: '🛏️ [CAM 4] - QUARTO DOS PAIS',
-        bg: '../cenario-quarto-dos-pais/cenario-quarto-dos%20pais.jpg',
+        bg: 'cenario-quarto-dos-pais/cenario-quarto-dos%20pais.jpg',
         defaultCoord: { x: 53.0, y: 84.0, h: 58.0, b: 80 },
         presets: [
           { name: 'Pé da Cama (Frente)', x: 53.0, y: 84.0, h: 58.0, b: 80 },
@@ -555,15 +555,15 @@
     const CHARACTERS = {
       pai: {
         name: 'Pai',
-        src: '../personagens/pai/InShot_20261015_193322516.png'
+        src: 'personagens/pai/InShot_20261015_193322516.png'
       },
       mae: {
         name: 'Mãe',
-        src: '../personagens/mãe/InShot_20261015_200557116.png'
+        src: 'personagens/mãe/InShot_20261015_200557116.png'
       },
       irmao: {
         name: 'Irmão Mais Novo',
-        src: '../personagens/irmão%20mais%20novo/InShot_20261015_192531594.png'
+        src: 'personagens/irmão%20mais%20novo/InShot_20261015_192531594.png'
       }
     };
 

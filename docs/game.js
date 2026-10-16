@@ -11,8 +11,8 @@
 const CONFIG = {
   // Caminhos das imagens do Escritório
   OFFICE: {
-    DOOR_OPEN: '../cenario-quarto-principal/imagens/porta-aberta.jpg',
-    DOOR_CLOSED: '../cenario-quarto-principal/imagens/porta-fechada.jpg',
+    DOOR_OPEN: 'cenario-quarto-principal/imagens/porta-aberta.jpg',
+    DOOR_CLOSED: 'cenario-quarto-principal/imagens/porta-fechada.jpg',
   },
 
   // Caminhos das Câmeras de Vigilância
@@ -20,22 +20,22 @@ const CONFIG = {
     cam1: {
       id: 'cam1',
       name: '[CAM 1] - SALA PRINCIPAL',
-      src: '../cenario-sala/fotos/cenario-sala.jpg'
+      src: 'cenario-sala/fotos/cenario-sala.jpg'
     },
     cam2: {
       id: 'cam2',
       name: '[CAM 2] - CORREDOR',
-      src: '../cenario-corredor/fotos/cenario-corredor.jpg'
+      src: 'cenario-corredor/fotos/cenario-corredor.jpg'
     },
     cam3: {
       id: 'cam3',
       name: '[CAM 3] - COZINHA',
-      src: '../cozinha/cenario-cozinha.jpg'
+      src: 'cozinha/cenario-cozinha.jpg'
     },
     cam4: {
       id: 'cam4',
       name: '[CAM 4] - QUARTO DOS PAIS',
-      src: encodeURI('../cenario-quarto-dos-pais/cenario-quarto-dos pais.jpg')
+      src: encodeURI('cenario-quarto-dos-pais/cenario-quarto-dos pais.jpg')
     }
   },
 
@@ -65,17 +65,17 @@ const CONFIG = {
     pai: {
       id: 'pai',
       name: 'Pai',
-      src: '../personagens/pai/InShot_20261015_193322516.png'
+      src: 'personagens/pai/InShot_20261015_193322516.png'
     },
     mae: {
       id: 'mae',
       name: 'Mãe',
-      src: '../personagens/mãe/InShot_20261015_200557116.png'
+      src: 'personagens/mãe/InShot_20261015_200557116.png'
     },
     irmao: {
       id: 'irmao',
       name: 'Irmão Mais Novo',
-      src: '../personagens/irmão%20mais%20novo/InShot_20261015_192531594.png'
+      src: 'personagens/irmão%20mais%20novo/InShot_20261015_192531594.png'
     }
   },
 
