@@ -16,7 +16,9 @@ body {
   font-family: 'Share Tech Mono', 'VT323', monospace;
   overflow: hidden;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,12 +28,26 @@ body {
 #game-container {
   position: relative;
   width: 100vw;
+  width: 100dvw;
   height: 56.25vw; /* 16:9 */
   max-height: 100vh;
+  max-height: 100dvh;
   max-width: 177.78vh; /* 16:9 */
+  max-width: 177.78dvh;
   background-color: #000;
   overflow: hidden;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+}
+
+:fullscreen #game-container,
+:-webkit-full-screen #game-container {
+  width: 100vw;
+  width: 100dvw;
+  height: 56.25vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  max-width: 177.78vh;
+  max-width: 177.78dvh;
 }
 
 /* ==============================================
@@ -320,6 +336,14 @@ body {
 
 .hud-top-right {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.hud-top-right .btn-hud-tool {
+  margin-top: 6px;
+  pointer-events: auto;
 }
 
 .hud-clock {
@@ -483,6 +507,8 @@ body {
   z-index: 60;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #flip-monitor-bar:hover {
@@ -1004,6 +1030,48 @@ kbd {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
+.hud-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  pointer-events: auto;
+}
+
+.btn-hud-tool {
+  background: rgba(17, 20, 24, 0.8);
+  border: 1px solid #3f3f46;
+  border-radius: 4px;
+  color: #a1a1aa;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-hud-tool:hover {
+  border-color: #00ffcc;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.btn-hud-tool:active {
+  transform: scale(0.96);
+}
+
+.btn-hud-tool.is-fullscreen {
+  border-color: #00ffcc;
+  color: #00ffcc;
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.25);
+}
+
 .btn-hud-menu {
   background: rgba(17, 20, 24, 0.8);
   border: 1px solid #3f3f46;
@@ -1015,7 +1083,6 @@ kbd {
   padding: 4px 10px;
   cursor: pointer;
   pointer-events: auto;
-  margin-top: 4px;
   transition: all 0.2s ease;
 }
 
@@ -1459,6 +1526,12 @@ kbd {
   font-weight: bold;
 }
 
+.watch-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-exit-watch {
   background: #881337;
   border: 1px solid #be123c;
@@ -1686,6 +1759,83 @@ kbd {
 @keyframes heartbeatVignette {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* ==============================================
+   8. ADAPTAÇÕES PARA DISPOSITIVOS MÓVEIS E TELA CHEIA
+   ============================================== */
+.mobile-rotate-hint {
+  display: none;
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .mobile-rotate-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 15, 20, 0.95);
+    border: 1px solid #00ffcc;
+    color: #e0f2fe;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    z-index: 9999;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    pointer-events: auto;
+    animation: pulseHint 2.5s infinite ease-in-out;
+  }
+
+  .btn-close-hint {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .btn-close-hint:hover {
+    color: #fff;
+  }
+
+  @keyframes pulseHint {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.2); }
+    50% { box-shadow: 0 0 18px rgba(0, 255, 204, 0.6); }
+  }
+}
+
+/* Otimização da barra de monitor e botões em telas menores / mobile */
+@media (max-width: 900px) {
+  #flip-monitor-bar {
+    width: 70%;
+    height: 52px;
+  }
+
+  .flip-bar-label {
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+  }
+
+  .office-hud {
+    top: 2%;
+    right: 2%;
+  }
+
+  .hud-clock {
+    font-size: 1.5rem;
+  }
+
+  .btn-hud-tool, .btn-hud-menu {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
 }
 
 

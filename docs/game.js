@@ -215,11 +215,17 @@ const DOM = {
   btnContinueGame: document.getElementById('btn-continue-game'),
   menuContinueTag: document.getElementById('menu-continue-tag'),
   btnShowControls: document.getElementById('btn-show-controls'),
+  btnMenuFullscreen: document.getElementById('btn-menu-fullscreen'),
   controlsModal: document.getElementById('controls-modal'),
   btnCloseControls: document.getElementById('btn-close-controls'),
   menuStaticCanvas: document.getElementById('menu-static-canvas'),
   menuCharacters: document.getElementById('menu-characters'),
   btnReturnMenu: document.getElementById('btn-return-menu'),
+  btnOfficeFullscreen: document.getElementById('btn-office-fullscreen'),
+  btnCameraFullscreen: document.getElementById('btn-camera-fullscreen'),
+  btnWatchFullscreen: document.getElementById('btn-watch-fullscreen'),
+  mobileRotateHint: document.getElementById('mobile-rotate-hint'),
+  btnCloseRotateHint: document.getElementById('btn-close-rotate-hint'),
 
   // Telas do Jogo
   officeScene: document.getElementById('office-scene'),
@@ -1364,6 +1370,89 @@ function startMenuGlitches() {
 }
 
 // ===================================================================
+// SISTEMA DE TELA CHEIA (FULLSCREEN) E ADAPTAÇÃO MOBILE
+// ===================================================================
+function isFullscreen() {
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+async function toggleFullscreen() {
+  if (typeof SoundFX !== 'undefined') {
+    SoundFX.init();
+    SoundFX.playMenuSelect();
+  }
+
+  try {
+    if (!isFullscreen()) {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        await elem.msRequestFullscreen();
+      }
+
+      // Tenta travar em orientação paisagem no celular se a API screen.orientation existir
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen();
+      }
+    }
+  } catch (err) {
+    console.warn('[TELA CHEIA] Não foi possível alternar tela cheia automaticamente:', err);
+  } finally {
+    updateFullscreenUI();
+  }
+}
+
+function updateFullscreenUI() {
+  const active = isFullscreen();
+  const toggleButtons = document.querySelectorAll('.btn-fullscreen-toggle');
+
+  toggleButtons.forEach(btn => {
+    const textEl = btn.querySelector('.fullscreen-btn-text');
+    const iconEl = btn.querySelector('.fullscreen-icon');
+
+    if (active) {
+      btn.classList.add('is-fullscreen');
+      btn.setAttribute('title', 'Sair da Tela Cheia [F]');
+      if (textEl) {
+        if (btn.id === 'btn-menu-fullscreen') {
+          textEl.textContent = '🗗 SAIR TELA CHEIA';
+        } else {
+          textEl.textContent = 'SAIR CHEIA';
+        }
+      }
+      if (iconEl) iconEl.textContent = '🗗';
+    } else {
+      btn.classList.remove('is-fullscreen');
+      btn.setAttribute('title', 'Alternar Tela Cheia [F]');
+      if (textEl) {
+        if (btn.id === 'btn-menu-fullscreen') {
+          textEl.textContent = '⛶ TELA CHEIA';
+        } else {
+          textEl.textContent = 'TELA CHEIA';
+        }
+      }
+      if (iconEl) iconEl.textContent = '⛶';
+    }
+  });
+}
+
+// ===================================================================
 // CONTROLE DE FLUXO: INICIAR JOGO E RETORNAR AO MENU
 // ===================================================================
 function startGame(nightNumber) {
@@ -2115,8 +2204,38 @@ function setupEvents() {
     DOM.btnExitWatch.addEventListener('click', closeWatch);
   }
 
-  // 7. Barra de puxar monitor
-  DOM.flipMonitorBar.addEventListener('click', toggleMonitor);
+  // 6.7 Botões de Tela Cheia em todas as cenas (Menu, Escritório, Câmeras, TV)
+  document.querySelectorAll('.btn-fullscreen-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+  });
+
+  // Eventos nativos de mudança de tela cheia do navegador
+  ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, updateFullscreenUI);
+  });
+
+  // Fechar dica de rotação mobile
+  if (DOM.btnCloseRotateHint && DOM.mobileRotateHint) {
+    DOM.btnCloseRotateHint.addEventListener('click', (e) => {
+      e.stopPropagation();
+      DOM.mobileRotateHint.style.display = 'none';
+    });
+  }
+
+  // 7. Barra de puxar monitor (com toque responsivo para celulares)
+  let lastMonitorTouchTime = 0;
+  DOM.flipMonitorBar.addEventListener('touchstart', (e) => {
+    lastMonitorTouchTime = Date.now();
+    toggleMonitor();
+  }, { passive: true });
+
+  DOM.flipMonitorBar.addEventListener('click', (e) => {
+    if (Date.now() - lastMonitorTouchTime < 400) return;
+    toggleMonitor();
+  });
 
   // 8. Botões de câmera no minimapa
   DOM.camButtons.forEach(btn => {
@@ -2129,6 +2248,13 @@ function setupEvents() {
 
   // 9. Atalhos de teclado
   window.addEventListener('keydown', (e) => {
+    // Tecla F: Alterna Tela Cheia em qualquer momento (menu ou jogo)
+    if (e.code === 'KeyF') {
+      e.preventDefault();
+      toggleFullscreen();
+      return;
+    }
+
     // Tecla ESC: Fecha modal de controles, fecha tela de assistir ou retorna ao menu
     if (e.code === 'Escape') {
       if (DOM.controlsModal && DOM.controlsModal.classList.contains('active')) {
@@ -2250,6 +2376,7 @@ function setupEvents() {
     }
   };
   window.toggleWatch = toggleWatch;
+  window.toggleFullscreen = toggleFullscreen;
   window.addAnxiety = cheatAddAnxiety;
   window.triggerGameOver = triggerGameOver;
   window.resetNight = resetGame;
