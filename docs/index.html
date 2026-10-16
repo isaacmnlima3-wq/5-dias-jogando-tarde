@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>5 DIAS JOGANDO TARDE</title>
-  <link rel="icon" type="image/png" href="../favicon/um-favicon.png">
-  <link rel="shortcut icon" type="image/png" href="../favicon/um-favicon.png">
+  <link rel="icon" type="image/png" href="favicon/um-favicon.png">
+  <link rel="shortcut icon" type="image/png" href="favicon/um-favicon.png">
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,8 +19,8 @@
          ============================================== -->
     <div id="office-scene" class="scene active">
       <!-- Imagens de fundo da porta (alternância suave) -->
-      <img id="bg-door-open" class="office-bg active" src="../cenario-quarto-principal/imagens/porta-aberta.jpg" alt="Porta Aberta">
-      <img id="bg-door-closed" class="office-bg" src="../cenario-quarto-principal/imagens/porta-fechada.jpg" alt="Porta Fechada">
+      <img id="bg-door-open" class="office-bg active" src="cenario-quarto-principal/imagens/porta-aberta.jpg" alt="Porta Aberta">
+      <img id="bg-door-closed" class="office-bg" src="cenario-quarto-principal/imagens/porta-fechada.jpg" alt="Porta Fechada">
 
       <!-- Camada para futuros personagens no escritório (ex: Irmão Mais Novo) -->
       <div id="office-character-layer" class="character-layer"></div>
@@ -68,20 +68,20 @@
          ============================================== -->
     <!-- Monitor de Câmeras -->
     <video id="video-monitor-open" class="monitor-transition-video" preload="auto" playsinline>
-      <source src="../camera/abrir.mp4" type="video/mp4">
+      <source src="camera/abrir.mp4" type="video/mp4">
     </video>
     
     <video id="video-monitor-close" class="monitor-transition-video" preload="auto" playsinline>
-      <source src="../camera/abrir-camera-reverso.mp4" type="video/mp4">
+      <source src="camera/abrir-camera-reverso.mp4" type="video/mp4">
     </video>
 
     <!-- Transição da TV (Assistir / Voltar) -->
     <video id="video-watch-open" class="monitor-transition-video" preload="auto" playsinline>
-      <source src="../assistir/InShot_20261016_111634365.mp4" type="video/mp4">
+      <source src="assistir/InShot_20261016_111634365.mp4" type="video/mp4">
     </video>
     
     <video id="video-watch-close" class="monitor-transition-video" preload="auto" playsinline>
-      <source src="../assistir/InShot_20261016_111711384.mp4" type="video/mp4">
+      <source src="assistir/InShot_20261016_111711384.mp4" type="video/mp4">
     </video>
 
     <!-- ==============================================
@@ -90,7 +90,7 @@
     <div id="camera-system" class="scene">
       <!-- Visor da Câmera (Fundo do cômodo atual) -->
       <div id="camera-feed-container">
-        <img id="camera-feed-img" src="../cenario-sala/fotos/cenario-sala.jpg" alt="Feed da Câmera">
+        <img id="camera-feed-img" src="cenario-sala/fotos/cenario-sala.jpg" alt="Feed da Câmera">
         
         <!-- Camada para futuros personagens na câmera ativa -->
         <div id="camera-character-layer" class="character-layer"></div>
@@ -117,7 +117,7 @@
       <!-- Painel do Mapa e Botões das Câmeras (Baseado nas Coordenadas Extraídas) -->
       <div id="map-container">
         <!-- Imagem do mapa de fundo -->
-        <img id="map-bg-img" src="../camera/mapa.png" alt="Mapa da Casa">
+        <img id="map-bg-img" src="camera/mapa.png" alt="Mapa da Casa">
 
         <!-- Botões Interativos das Câmeras posicionados sobre o mapa -->
         <button class="cam-map-btn active" data-cam="cam1" id="btn-cam1" title="Sala Principal">
@@ -223,19 +223,19 @@
       <div id="menu-characters" class="menu-characters-container">
         <!-- Mãe (Esquerda / Fundo) -->
         <div class="menu-char-wrapper char-mae" title="Mãe">
-          <img src="../personagens/mãe/InShot_20261015_200557116.png" alt="Mãe" class="menu-char-img">
+          <img src="personagens/mãe/InShot_20261015_200557116.png" alt="Mãe" class="menu-char-img">
           <div class="char-glow"></div>
         </div>
 
         <!-- Irmão Mais Novo (Centro / Frente) -->
         <div class="menu-char-wrapper char-irmao" title="Irmão Mais Novo">
-          <img src="../personagens/irmão%20mais%20novo/InShot_20261015_192531594.png" alt="Irmão Mais Novo" class="menu-char-img">
+          <img src="personagens/irmão%20mais%20novo/InShot_20261015_192531594.png" alt="Irmão Mais Novo" class="menu-char-img">
           <div class="char-glow"></div>
         </div>
 
         <!-- Pai (Direita / Fundo) -->
         <div class="menu-char-wrapper char-pai" title="Pai">
-          <img src="../personagens/pai/InShot_20261015_193322516.png" alt="Pai" class="menu-char-img">
+          <img src="personagens/pai/InShot_20261015_193322516.png" alt="Pai" class="menu-char-img">
           <div class="char-glow"></div>
         </div>
       </div>
