@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5 DIAS JOGANDO TARDE</title>
+  <link rel="icon" type="image/png" href="../favicon/um-favicon.png">
+  <link rel="shortcut icon" type="image/png" href="../favicon/um-favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container">
+    
+    <!-- ==============================================
+         1. CENA DO ESCRITÓRIO PRINCIPAL (VISÃO DO JOGADOR)
+         ============================================== -->
+    <div id="office-scene" class="scene active">
+      <!-- Imagens de fundo da porta (alternância suave) -->
+      <img id="bg-door-open" class="office-bg active" src="../cenario-quarto-principal/imagens/porta-aberta.jpg" alt="Porta Aberta">
+      <img id="bg-door-closed" class="office-bg" src="../cenario-quarto-principal/imagens/porta-fechada.jpg" alt="Porta Fechada">
+
+      <!-- Camada para futuros personagens no escritório (ex: Irmão Mais Novo) -->
+      <div id="office-character-layer" class="character-layer"></div>
+
+      <!-- Efeito sutil de vinheta/sombra do escritório -->
+      <div class="office-vignette"></div>
+
+      <!-- HUD do Escritório (Relógio e Noite) -->
+      <div class="office-hud">
+        <div class="hud-clock">12:00 AM</div>
+        <div class="hud-night">NOITE 1</div>
+        <button id="btn-return-menu" class="btn-hud-menu" title="Voltar ao Menu Principal [ESC]">MENU [ESC]</button>
+      </div>
+
+      <!-- Painel de Controle da Porta (Estilo FNAF) -->
+      <div id="door-panel">
+        <div class="panel-header">PORTA</div>
+        <button id="btn-toggle-door" class="door-button open">
+          <span class="btn-indicator"></span>
+          <span id="door-status-text">ABERTA</span>
+        </button>
+        <div class="door-shortcut-hint">[ESPAÇO] ou clique</div>
+      </div>
+
+      <!-- Painel Lateral Direito: Modo Assistir TV / Celular (Anti-Ansiedade) -->
+      <div id="watch-panel">
+        <div class="panel-header">DISTRAÇÃO</div>
+        <button id="btn-toggle-watch" class="watch-button" title="Assistir Vídeo Relaxante [V]">
+          <span class="btn-indicator-watch"></span>
+          <span class="btn-watch-icon">📺</span>
+          <span id="watch-status-text">ASSISTIR</span>
+        </button>
+        <div class="watch-shortcut-hint">[V] ou clique</div>
+      </div>
+
+      <!-- Aba lateral clicável na borda direita -->
+      <div id="watch-edge-tab" title="Clique para assistir [V]">
+        <span class="edge-tab-arrow">◀</span>
+        <span class="edge-tab-text">ASSISTIR TV</span>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         2. TRANSIÇÕES EM VÍDEO (MONITOR E ASSISTIR)
+         ============================================== -->
+    <!-- Monitor de Câmeras -->
+    <video id="video-monitor-open" class="monitor-transition-video" preload="auto" playsinline>
+      <source src="../camera/abrir.mp4" type="video/mp4">
+    </video>
+    
+    <video id="video-monitor-close" class="monitor-transition-video" preload="auto" playsinline>
+      <source src="../camera/abrir-camera-reverso.mp4" type="video/mp4">
+    </video>
+
+    <!-- Transição da TV (Assistir / Voltar) -->
+    <video id="video-watch-open" class="monitor-transition-video" preload="auto" playsinline>
+      <source src="../assistir/InShot_20261016_111634365.mp4" type="video/mp4">
+    </video>
+    
+    <video id="video-watch-close" class="monitor-transition-video" preload="auto" playsinline>
+      <source src="../assistir/InShot_20261016_111711384.mp4" type="video/mp4">
+    </video>
+
+    <!-- ==============================================
+         3. SISTEMA DE CÂMERAS (MONITOR ABERTO)
+         ============================================== -->
+    <div id="camera-system" class="scene">
+      <!-- Visor da Câmera (Fundo do cômodo atual) -->
+      <div id="camera-feed-container">
+        <img id="camera-feed-img" src="../cenario-sala/fotos/cenario-sala.jpg" alt="Feed da Câmera">
+        
+        <!-- Camada para futuros personagens na câmera ativa -->
+        <div id="camera-character-layer" class="character-layer"></div>
+        
+        <!-- Ruído e linhas estáticas de TV/CFTV -->
+        <canvas id="camera-static-canvas"></canvas>
+        <div class="scanlines"></div>
+        <div class="camera-vignette"></div>
+
+        <!-- Informações HUD da Câmera -->
+        <div class="camera-hud">
+          <div class="hud-top-left">
+            <span class="rec-dot"></span>
+            <span class="rec-text">● REC</span>
+            <div id="camera-name-display">[CAM 1] - SALA PRINCIPAL</div>
+          </div>
+          <div class="hud-top-right">
+            <div class="hud-clock">12:00 AM</div>
+            <div class="hud-night">NOITE 1</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel do Mapa e Botões das Câmeras (Baseado nas Coordenadas Extraídas) -->
+      <div id="map-container">
+        <!-- Imagem do mapa de fundo -->
+        <img id="map-bg-img" src="../camera/mapa.png" alt="Mapa da Casa">
+
+        <!-- Botões Interativos das Câmeras posicionados sobre o mapa -->
+        <button class="cam-map-btn active" data-cam="cam1" id="btn-cam1" title="Sala Principal">
+          <span>CAM 1</span>
+        </button>
+        <button class="cam-map-btn" data-cam="cam2" id="btn-cam2" title="Corredor">
+          <span>CAM 2</span>
+        </button>
+        <button class="cam-map-btn" data-cam="cam3" id="btn-cam3" title="Cozinha">
+          <span>CAM 3</span>
+        </button>
+        <button class="cam-map-btn" data-cam="cam4" id="btn-cam4" title="Quarto dos Pais">
+          <span>CAM 4</span>
+        </button>
+
+        <!-- Indicador da sua localização ("VOCÊ") -->
+        <div id="map-you-indicator" title="Você está aqui">
+          <span>VOCÊ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         3.5 TELA DE ASSISTIR (VÍDEO / ANTI-ANSIEDADE)
+         ============================================== -->
+    <div id="watch-system" class="scene">
+      <div class="watch-screen-wrapper">
+        <!-- Topo da TV / Moldura -->
+        <div class="watch-header-bar">
+          <div class="watch-title-group">
+            <span class="watch-live-dot"></span>
+            <span class="watch-title-text">MODO RELAXAR • TRANSMISSÃO</span>
+          </div>
+          <button id="btn-exit-watch" class="btn-exit-watch" title="Voltar ao Escritório [V / ESC]">
+            ◀ VOLTAR AO ESCRITÓRIO [V]
+          </button>
+        </div>
+
+        <!-- Visor do Vídeo (Player do YouTube) -->
+        <div class="watch-video-container">
+          <div class="watch-tv-scanlines"></div>
+          <div class="watch-tv-glare"></div>
+          <iframe 
+            id="watch-youtube-iframe" 
+            src="" 
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            referrerpolicy="strict-origin-when-cross-origin" 
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <!-- Barra inferior de status -->
+        <div class="watch-footer-bar">
+          <div class="watch-status-calm">
+            <span class="status-pulse-calm">🟢</span>
+            <span>ASSISTINDO: ANSIEDADE CAINDO (-3% por segundo)</span>
+          </div>
+          <div class="watch-status-alert">
+            <span>⚠️ ATENÇÃO: Os familiares continuam rondando a casa!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         4. BARRA DE CONTROLE DO MONITOR (FLIP TABLET)
+         ============================================== -->
+    <div id="flip-monitor-bar" title="Clique ou passe o mouse para abrir/fechar as câmeras">
+      <div class="flip-bar-line"></div>
+      <div class="flip-bar-label">
+        <span class="arrow-icon">▲</span> MONITOR DE CÂMERAS <span class="arrow-icon">▲</span>
+      </div>
+      <div class="flip-bar-line"></div>
+    </div>
+
+    <!-- ==============================================
+         4.5 HUD DE ANSIEDADE (MECÂNICA DE TENSÃO)
+         ============================================== -->
+    <div id="anxiety-hud">
+      <div class="anxiety-label-row">
+        <span class="anxiety-heart" id="anxiety-heart">💓</span>
+        <span class="anxiety-text">ANSIEDADE:</span>
+        <span id="anxiety-percentage">0</span>%
+      </div>
+      <div class="anxiety-meter-bg">
+        <div id="anxiety-meter-fill" class="anxiety-meter-fill"></div>
+      </div>
+      <div class="anxiety-status-tag" id="anxiety-status-tag">CALMO (+1%/s)</div>
+    </div>
+
+    <!-- Efeito visual de pânico / taquicardia quando a ansiedade está alta -->
+    <div id="anxiety-vignette" class="anxiety-vignette"></div>
+
+
+
+    <!-- ==============================================
+         5. MENU PRINCIPAL (ESTILO CLÁSSICO FNAF)
+         ============================================== -->
+    <div id="main-menu" class="main-menu-overlay active">
+      <!-- Fundo com os 3 Personagens -->
+      <div id="menu-characters" class="menu-characters-container">
+        <!-- Mãe (Esquerda / Fundo) -->
+        <div class="menu-char-wrapper char-mae" title="Mãe">
+          <img src="../personagens/mãe/InShot_20261015_200557116.png" alt="Mãe" class="menu-char-img">
+          <div class="char-glow"></div>
+        </div>
+
+        <!-- Irmão Mais Novo (Centro / Frente) -->
+        <div class="menu-char-wrapper char-irmao" title="Irmão Mais Novo">
+          <img src="../personagens/irmão%20mais%20novo/InShot_20261015_192531594.png" alt="Irmão Mais Novo" class="menu-char-img">
+          <div class="char-glow"></div>
+        </div>
+
+        <!-- Pai (Direita / Fundo) -->
+        <div class="menu-char-wrapper char-pai" title="Pai">
+          <img src="../personagens/pai/InShot_20261015_193322516.png" alt="Pai" class="menu-char-img">
+          <div class="char-glow"></div>
+        </div>
+      </div>
+
+      <!-- Ruído Estático e Linhas CRT do Menu -->
+      <canvas id="menu-static-canvas"></canvas>
+      <div class="menu-scanlines"></div>
+      <div class="menu-vignette"></div>
+
+      <!-- Conteúdo do Menu (Título e Opções Interativas) -->
+      <div class="menu-content">
+        <div class="menu-title-block">
+          <h1 class="fnaf-menu-title">
+            <span class="title-word">5 DIAS</span>
+            <span class="title-word">JOGANDO</span>
+            <span class="title-word title-highlight">TARDE</span>
+          </h1>
+          <div class="menu-stars-row">
+            <span id="menu-beaten-star" class="menu-star" title="Sobreviveu aos 5 Dias!" style="display: none;">★</span>
+          </div>
+          <div class="menu-subtitle">EDIÇÃO TERROR FAMILIAR</div>
+        </div>
+
+        <!-- Opções do Menu -->
+        <div class="menu-actions">
+          <button id="btn-new-game" class="menu-btn">
+            <span class="menu-arrow">&gt;&gt;</span>
+            <span class="menu-btn-text">NOVO JOGO</span>
+          </button>
+
+          <button id="btn-continue-game" class="menu-btn">
+            <span class="menu-arrow">&gt;&gt;</span>
+            <div class="menu-btn-col">
+              <span class="menu-btn-text">CONTINUAR</span>
+              <span id="menu-continue-tag" class="menu-night-tag">NOITE 1</span>
+            </div>
+          </button>
+
+          <button id="btn-show-controls" class="menu-btn menu-btn-secondary">
+            <span class="menu-arrow">&gt;&gt;</span>
+            <span class="menu-btn-text">COMO JOGAR</span>
+          </button>
+
+          <a href="posicionador.html" class="menu-btn menu-btn-secondary" style="text-decoration: none;">
+            <span class="menu-arrow">&gt;&gt;</span>
+            <span class="menu-btn-text">📍 POSICIONADOR DEV</span>
+          </a>
+        </div>
+
+        <div class="menu-info-footer">
+          <span>v1.0 • 5 DIAS JOGANDO TARDE</span>
+        </div>
+      </div>
+
+      <!-- Modal de Controles / Instruções -->
+      <div id="controls-modal" class="controls-modal">
+        <div class="controls-box">
+          <div class="controls-header">COMO SOBREVIVER</div>
+          <p class="controls-desc">Sobreviva das 12:00 AM às 6:00 AM controlando sua ansiedade e vigiando os perigos da casa.</p>
+          <div class="controls-list">
+            <div class="ctrl-item"><kbd>ESPAÇO</kbd> <span>Abrir / Fechar Porta do Quarto</span></div>
+            <div class="ctrl-item"><kbd>C</kbd> ou <kbd>S</kbd> <span>Subir / Descer Monitor de Câmeras</span></div>
+            <div class="ctrl-item"><kbd>V</kbd> <span>Assistir TV / Relaxar (-3% Ansiedade por seg)</span></div>
+            <div class="ctrl-item"><kbd>1</kbd> a <kbd>4</kbd> <span>Mudar de Câmera no Monitor</span></div>
+            <div class="ctrl-item"><kbd>ESC</kbd> <span>Voltar ao Escritório / Menu Principal</span></div>
+            <div class="ctrl-item test-hint"><kbd>T</kbd> <span>+1 Hora (Atalho de Teste)</span></div>
+            <div class="ctrl-item test-hint"><kbd>K</kbd> / <kbd>J</kbd> <span>+10% / -10% Ansiedade (Atalho de Teste)</span></div>
+            <div class="ctrl-item test-hint"><kbd>P</kbd> / <kbd>M</kbd> / <kbd>I</kbd> <span>Mandar Pai / Mãe / Irmão pra Porta</span></div>
+            <div class="ctrl-item test-hint"><kbd>R</kbd> <span>Resetar Personagens pros Quartos</span></div>
+          </div>
+          <button id="btn-close-controls" class="btn-close-controls">FECHAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         6. TELA DE VITÓRIA (6:00 AM)
+         ============================================== -->
+    <div id="win-screen" class="win-overlay">
+      <div class="win-box">
+        <div class="fnaf-clock-anim">
+          <div class="hour-container">
+            <span class="old-hour">5</span>
+            <span class="new-hour">6</span>
+          </div>
+          <span class="am-label">:00 AM</span>
+        </div>
+        <div class="win-title">VOCÊ SOBREVIVEU!</div>
+        <div id="win-night-title" class="win-night-text">NOITE 1 CONCLUÍDA</div>
+        <p class="win-desc">O relógio marcou 6:00 AM. A noite acabou!</p>
+        <div class="win-restart-box">
+          <button id="btn-win-restart" class="btn-win-restart">PRÓXIMA NOITE</button>
+          <button id="btn-win-menu" class="btn-secondary-screen">MENU PRINCIPAL</button>
+          <div class="auto-reset-hint">Continuando em <span id="win-countdown">8</span>s...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         7. TELA DE GAME OVER
+         ============================================== -->
+    <div id="gameover-screen" class="gameover-overlay">
+      <div class="gameover-box">
+        <div class="gameover-glitch-title">GAME OVER</div>
+        <div id="gameover-subtitle" class="gameover-subtitle">VOCÊ FOI PEGO</div>
+        <p id="gameover-desc" class="gameover-desc">Você não sobreviveu à noite...</p>
+        <div class="gameover-stats">
+          <span>HORÁRIO ALCANÇADO: <strong id="gameover-hour-reached">12:00 AM</strong></span>
+        </div>
+        <div class="gameover-restart-box">
+          <button id="btn-gameover-restart" class="btn-gameover-restart">TENTAR NOVAMENTE</button>
+          <button id="btn-gameover-menu" class="btn-secondary-screen">MENU PRINCIPAL</button>
+          <div class="auto-reset-hint">Reiniciando em <span id="gameover-countdown">8</span>s...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
