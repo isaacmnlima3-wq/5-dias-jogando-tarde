@@ -46,7 +46,7 @@ const CONFIG = {
 
   // Configuração do Tempo e Duração da Noite
   TIME: {
-    HOUR_DURATION_SECONDS: 120, // Cada hora dura 2 minutos (120 segundos)
+    HOUR_DURATION_SECONDS: 60,  // Cada hora dura 1 minuto (60 segundos)
     TOTAL_HOURS: 6,             // 12:00 AM até 6:00 AM (Vitória ao atingir 6:00 AM)
   },
 
@@ -251,10 +251,7 @@ const DOM = {
   doorStatusText: document.getElementById('door-status-text'),
 
   // Assistir (TV / Anti-Ansiedade)
-  watchPanel: document.getElementById('watch-panel'),
-  btnToggleWatch: document.getElementById('btn-toggle-watch'),
   watchEdgeTab: document.getElementById('watch-edge-tab'),
-  watchStatusText: document.getElementById('watch-status-text'),
   btnExitWatch: document.getElementById('btn-exit-watch'),
   videoWatchOpen: document.getElementById('video-watch-open'),
   videoWatchClose: document.getElementById('video-watch-close'),
@@ -2193,10 +2190,7 @@ function setupEvents() {
   // 6. Botão da Porta
   DOM.btnToggleDoor.addEventListener('click', toggleDoor);
 
-  // 6.5 Botões do Modo Assistir TV / Celular (Anti-Ansiedade)
-  if (DOM.btnToggleWatch) {
-    DOM.btnToggleWatch.addEventListener('click', toggleWatch);
-  }
+  // 6.5 Botão da Aba Lateral do Modo Assistir TV / Celular (Anti-Ansiedade)
   if (DOM.watchEdgeTab) {
     DOM.watchEdgeTab.addEventListener('click', toggleWatch);
   }
