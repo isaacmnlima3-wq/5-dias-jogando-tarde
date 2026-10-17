@@ -54,8 +54,20 @@ const CONFIG = {
   ANXIETY: {
     INITIAL: 0,
     MAX: 100,
-    DRAIN_WATCHING_PER_SEC: 3,  // Cada segundo assistindo reduz -3%
-    GAIN_DEFAULT_PER_SEC: 2,    // Cada segundo sem assistir aumenta +2%
+    DRAIN_WATCHING_PER_SEC: 3,  // Fallback padrão
+    GAIN_DEFAULT_PER_SEC: 2,    // Fallback padrão
+    // Taxas dinâmicas por noite (% por segundo)
+    // Noite 1 e 2: sobe 1%, desce 4% ao assistir vídeo
+    // Noite 3: sobe 2%, desce 4% ao assistir vídeo
+    // Noite 4: sobe 2%, desce 3% ao assistir vídeo
+    // Noite 5: sobe 3%, desce 3% ao assistir vídeo
+    RATES_BY_NIGHT: {
+      1: { gain: 1, drain: 4 },
+      2: { gain: 1, drain: 4 },
+      3: { gain: 2, drain: 4 },
+      4: { gain: 2, drain: 3 },
+      5: { gain: 3, drain: 3 }
+    },
     INTERVAL_MS: 1000,
     YOUTUBE_URL: "https://www.youtube.com/embed/OIJBDKpX2wA?si=QOLT-M3_iTB5hXzb&autoplay=1&enablejsapi=1"
   },
@@ -256,6 +268,7 @@ const DOM = {
   videoWatchOpen: document.getElementById('video-watch-open'),
   videoWatchClose: document.getElementById('video-watch-close'),
   watchYoutubeIframe: document.getElementById('watch-youtube-iframe'),
+  watchStatusDrainText: document.getElementById('watch-status-drain-text'),
 
   // HUD e Efeitos de Ansiedade
   anxietyHud: document.getElementById('anxiety-hud'),
@@ -1090,6 +1103,31 @@ function triggerWin() {
 // SISTEMA DE ANSIEDADE E TENSÃO (ANTI-ANSIEDADE)
 // ==============================================
 
+// Obtém as taxas de subida e descida da ansiedade para a Noite atual
+function getAnxietyRates(night = GameState.currentNight) {
+  const currentNightNum = Number(night) || 1;
+  const ratesTable = CONFIG.ANXIETY.RATES_BY_NIGHT;
+  if (ratesTable && ratesTable[currentNightNum]) {
+    return ratesTable[currentNightNum];
+  }
+  if (currentNightNum >= 5) {
+    return { gain: 3, drain: 3 };
+  }
+  if (currentNightNum <= 2) {
+    return { gain: 1, drain: 4 };
+  }
+  if (currentNightNum <= 3) {
+    return { gain: 2, drain: 4 };
+  }
+  if (currentNightNum === 4) {
+    return { gain: 2, drain: 3 };
+  }
+  return {
+    gain: CONFIG.ANXIETY.GAIN_DEFAULT_PER_SEC || 2,
+    drain: CONFIG.ANXIETY.DRAIN_WATCHING_PER_SEC || 3
+  };
+}
+
 function updateAnxietyDisplays() {
   const anxietyVal = Math.round(Math.min(100, Math.max(0, GameState.anxiety)));
 
@@ -1114,19 +1152,25 @@ function updateAnxietyDisplays() {
     }
   }
 
+  const rates = getAnxietyRates(GameState.currentNight);
+
   if (DOM.anxietyStatusTag) {
-    const gainRate = CONFIG.ANXIETY.GAIN_DEFAULT_PER_SEC;
     if (GameState.isWatching) {
-      DOM.anxietyStatusTag.textContent = 'RELAXANDO (-3%/s)';
+      DOM.anxietyStatusTag.textContent = `RELAXANDO (-${rates.drain}%/s)`;
     } else if (anxietyVal < 40) {
-      DOM.anxietyStatusTag.textContent = `CALMO (+${gainRate}%/s)`;
+      DOM.anxietyStatusTag.textContent = `CALMO (+${rates.gain}%/s)`;
     } else if (anxietyVal < 70) {
-      DOM.anxietyStatusTag.textContent = `INQUIETO (+${gainRate}%/s)`;
+      DOM.anxietyStatusTag.textContent = `INQUIETO (+${rates.gain}%/s)`;
     } else if (anxietyVal < 90) {
-      DOM.anxietyStatusTag.textContent = `MUITO ANSIOSO (+${gainRate}%/s)`;
+      DOM.anxietyStatusTag.textContent = `MUITO ANSIOSO (+${rates.gain}%/s)`;
     } else {
-      DOM.anxietyStatusTag.textContent = `PÂNICO IMINENTE! (+${gainRate}%/s)`;
+      DOM.anxietyStatusTag.textContent = `PÂNICO IMINENTE! (+${rates.gain}%/s)`;
     }
+  }
+
+  // Atualiza o texto do rodapé do modo assistir
+  if (DOM.watchStatusDrainText) {
+    DOM.watchStatusDrainText.textContent = `ASSISTINDO: ANSIEDADE CAINDO (-${rates.drain}% por segundo)`;
   }
 
   // Vinheta visual na tela
@@ -1148,12 +1192,14 @@ function startAnxietyTimer() {
   GameState.anxietyTimer = setInterval(() => {
     if (!GameState.started || GameState.hasWon || GameState.isGameOver) return;
 
+    const rates = getAnxietyRates(GameState.currentNight);
+
     if (GameState.isWatching) {
-      // Cada segundo assistindo reduz -3%
-      GameState.anxiety = Math.max(0, GameState.anxiety - CONFIG.ANXIETY.DRAIN_WATCHING_PER_SEC);
+      // Cada segundo assistindo reduz conforme a taxa da noite (Noites 1-3: -4%, Noites 4-5: -3%)
+      GameState.anxiety = Math.max(0, GameState.anxiety - rates.drain);
     } else {
-      // Fazendo nada ou nas câmeras: cada segundo aumenta +1%
-      GameState.anxiety = Math.min(100, GameState.anxiety + CONFIG.ANXIETY.GAIN_DEFAULT_PER_SEC);
+      // Fazendo nada ou nas câmeras: cada segundo aumenta conforme a taxa da noite (Noites 1-2: +1%, Noites 3-4: +2%, Noite 5: +3%)
+      GameState.anxiety = Math.min(100, GameState.anxiety + rates.gain);
     }
 
     updateAnxietyDisplays();
